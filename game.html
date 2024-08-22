@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Guess</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        .mode-button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center mt-2">
+        <div class="alert alert-light" role="alert">
+            <h1>Random Guess</h1>
+        </div>
+        <div class="card mx-auto" style="width: 20rem;">
+            <img src="https://lh3.googleusercontent.com/nGO6N4TyUE7O3OT2Q9JNBNPMZlPYGqp62HrKFmSg8LdcZh3f27mT6CQW_vYPVdf6abeb" class="card-img-top" alt="">
+            <div class="card-body">
+                <h5 class="card-title">Guessing Game</h5>
+                <p class="card-text">Select a mode and guess a number between 1 and 100. You will have a limited number of attempts based on the selected mode.</p>
+                
+                <!-- Mode Selection -->
+                <div>
+                    <button class="btn btn-success mode-button" onclick="setMode('easy')">Easy (10 guesses)</button>
+                    <button class="btn btn-primary mode-button" onclick="setMode('medium')">Medium (5 guesses)</button>
+                    <button class="btn btn-danger mode-button" onclick="setMode('hard')">Hard (3 guesses)</button>
+                </div>
+                
+                <!-- Input for Guessing -->
+                <input type="number" id="guessInput" class="form-control mb-3" placeholder="Enter a number" min="1" max="100" disabled>
+                
+                <!-- Button to Submit Guess -->
+                <button class="btn btn-primary" onclick="checkGuess()" id="submitGuessBtn" disabled>Submit Guess</button>
+
+                <!-- Placeholder for Result -->
+                <p id="resultMessage" class="mt-3"></p>
+                <p id="attemptsRemaining" class="mt-3">Attempts remaining: </p>
+                
+                <!-- Play Again Button -->
+                <button class="btn btn-secondary mt-3" onclick="playAgain()" id="playAgainBtn" style="display: none;">Play Again</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let randomNumber;
+        let attemptsRemaining;
+        let gameMode;
+
+        function setMode(mode) {
+            gameMode = mode;
+            switch (mode) {
+                case 'easy':
+                    attemptsRemaining = 10;
+                    document.body.style.backgroundColor = '#d4edda'; // Green
+                    break;
+                case 'medium':
+                    attemptsRemaining = 5;
+                    document.body.style.backgroundColor = '#cce5ff'; // Blue
+                    break;
+                case 'hard':
+                    attemptsRemaining = 3;
+                    document.body.style.backgroundColor = '#f8d7da'; // Red
+                    break;
+                default:
+                    attemptsRemaining = 5;
+            }
+            initializeGame();
+        }
+
+        function initializeGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            console.log('Random Number (for testing purposes):', randomNumber);
+
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('submitGuessBtn').disabled = false;
+            document.getElementById('playAgainBtn').style.display = 'none';
+            document.getElementById('resultMessage').textContent = '';
+            document.getElementById('attemptsRemaining').textContent = `Attempts remaining: ${attemptsRemaining}`;
+        }
+
+        function checkGuess() {
+            const userGuess = parseInt(document.getElementById('guessInput').value);
+            const resultMessage = document.getElementById('resultMessage');
+            const attemptsMessage = document.getElementById('attemptsRemaining');
+            
+            if (isNaN(userGuess)) {
+                resultMessage.textContent = "Please enter a valid number.";
+                resultMessage.classList.add('text-danger');
+                return;
+            }
+
+            if (userGuess < 1 || userGuess > 100) {
+                resultMessage.textContent = "Please enter a number between 1 and 100.";
+                resultMessage.classList.add('text-danger');
+            } else if (userGuess === randomNumber) {
+                resultMessage.textContent = "Congratulations! You guessed the correct number.";
+                resultMessage.classList.remove('text-danger');
+                resultMessage.classList.add('text-success');
+                endGame(true);
+                showCelebrationPopup(); // Show party pop-up
+            } else {
+                attemptsRemaining--;
+                if (attemptsRemaining <= 0) {
+                    endGame(false);
+                } else {
+                    resultMessage.textContent = userGuess < randomNumber ? "Too low! Try again." : "Too high! Try again.";
+                    resultMessage.classList.add('text-danger');
+                }
+                attemptsMessage.textContent = `Attempts remaining: ${attemptsRemaining}`;
+            }
+        }
+
+        function endGame(won) {
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('submitGuessBtn').disabled = true;
+            document.getElementById('playAgainBtn').style.display = 'inline';
+
+            if (!won) {
+                showGameOverPopup();
+            }
+        }
+
+        function playAgain() {
+            initializeGame();
+        }
+
+        function showCelebrationPopup() {
+            Swal.fire({
+                title: 'Congratulations!',
+                text: 'You guessed the correct number!',
+                icon: 'success',
+                confirmButtonText: 'Play Again',
+                backdrop: `
+                    rgba(0,0,0,0.5)
+                    url('https://media.giphy.com/media/3o7aD6Ej2tghoMIZta/giphy.gif')
+                    center center
+                    no-repeat
+                `,
+                customClass: {
+                    popup: 'animated bounceIn'
+                }
+            }).then(() => {
+                playAgain(); // Automatically restart game when the user clicks "Play Again"
+            });
+        }
+
+        function showGameOverPopup() {
+            Swal.fire({
+                title: 'Oops!',
+                text: 'You used all your guesses. Better luck next time!',
+                icon: 'error',
+                confirmButtonText: 'Play Again',
+                backdrop: `
+                    rgba(0,0,0,0.5)
+                    url('https://media.giphy.com/media/3o7aD6Ej2tghoMIZta/giphy.gif')
+                    center center
+                    no-repeat
+                `,
+                customClass: {
+                    popup: 'animated bounceIn'
+                }
+            }).then(() => {
+                playAgain(); // Automatically restart game when the user clicks "Play Again"
+            });
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkGuess();
+            }
+        }
+
+        // Initialize the game on page load
+        window.onload = function() {
+            document.getElementById('guessInput').addEventListener('keypress', handleKeyPress);
+        };
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> 
+</body>
+</html>
